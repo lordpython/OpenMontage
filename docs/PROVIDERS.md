@@ -81,6 +81,7 @@ AZURE_SPEECH_REGION=         # Speech resource region, e.g. eastus
 FAL_KEY=                     # FLUX, Recraft, Kling, Veo, MiniMax video
 MINIMAX_API_KEY=             # MiniMax first-party image + MiniMax H3 video generation
 ATLASCLOUD_API_KEY=          # Atlas Cloud image/video gateway
+ONEPROVIDER_API_KEY=         # oneprovider.dev gateway — GPT Image 2 images (+ chat models)
 
 # KLING OFFICIAL DIRECT API
 KLING_API_KEY=               # Official Kling video, image, TTS, avatar, lip sync
@@ -164,6 +165,36 @@ Current xAI docs pricing for the Grok media models:
 | `grok-imagine-video` input images | $0.002 per input image |
 
 OpenMontage now uses those published rates in the Grok tool estimators.
+
+---
+
+### oneprovider.dev — OpenAI-Compatible Gateway (GPT Image 2)
+
+> **Best if you want one prepaid key for GPT Image 2 generation plus Claude/GPT/Gemini chat models.** An OpenRouter-style aggregator exposing OpenAI-compatible (`/v1/chat/completions`, `/v1/images/generations`) and Anthropic-native (`/v1/messages`) routes under a single balance.
+
+**Tool unlocked:** `oneprovider_image`
+**Env var:** `ONEPROVIDER_API_KEY` (optional override: `ONEPROVIDER_BASE_URL`)
+
+#### Setup
+
+1. Open the cabinet — `@oneprovider_robot` on Telegram or https://app.oneprovider.dev — and top up the balance
+2. Issue a key (`sk-` + 64 hex characters); keys run up to 90 days and can be paused
+3. Add to `.env`: `ONEPROVIDER_API_KEY=sk-...`
+
+#### What it's best for
+
+- GPT Image 2 generation and single-image edits through the documented Images API
+- One key across image models: `gpt-image-2`, `gpt-image-2.5-sunburst`, `gemini-3-pro-image`, `gemini-3.1-flash-image`, `grok-imagine-image-2.0`
+- Chat-model access (Claude/GPT/Gemini/Kimi/Qwen) for external OpenAI-compatible or Anthropic clients — OpenMontage currently wires only the image route into a tool
+
+#### API contract notes
+
+- `POST /v1/images/generations` (JSON) and `POST /v1/images/edits` (multipart with one image file); auth via `Authorization: Bearer` (or `x-api-key`)
+- Responses return `b64_json` plus a `usage` block; the tool computes cost from that usage (published rates: $8.00/1M image input, $2.00/1M cached image input, $30.00/1M image output tokens — a 1024x1024 low-quality `gpt-image-2` image is ≈ $0.06)
+- Optional request fields are only sent when explicitly supplied; the gateway rejects unknown injections on routed models
+- `429 insufficient_balance` means top up — do not retry; `429 rate_limit_error` and `5xx` are retryable with backoff
+
+Authoritative reference: https://oneprovider.dev/docs/llms.txt
 
 ---
 
